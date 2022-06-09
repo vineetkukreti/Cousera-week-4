@@ -1,4 +1,11 @@
-# Predict activity quality from activity monitors
+---
+title: "Predict activity quality from activity monitors"
+author: "Onur Akpolat"
+date: "24. January 2015"
+output:
+  html_document:
+    keep_md: yes
+---
 
 ##Synopsis
 
@@ -20,8 +27,8 @@ The outcome variable is `classe`, a factor variable with 5 levels. For this data
 
 The initial configuration consists of loading some required packages and initializing some variables.
 
+```{r configuration, echo=TRUE, results='hide'}
 
-```r
 #Data variables
 training.file   <- './data/pml-training.csv'
 test.cases.file <- './data/pml-testing.csv'
@@ -38,56 +45,24 @@ if (!file.exists("data/submission")){
 
 #R-Packages
 IscaretInstalled <- require("caret")
-```
-
-```
-## Loading required package: caret
-## Loading required package: lattice
-## Loading required package: ggplot2
-```
-
-```r
 if(!IscaretInstalled){
     install.packages("caret")
     library("caret")
     }
 
 IsrandomForestInstalled <- require("randomForest")
-```
-
-```
-## Loading required package: randomForest
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.
-```
-
-```r
 if(!IsrandomForestInstalled){
     install.packages("randomForest")
     library("randomForest")
     }
 
 IsRpartInstalled <- require("rpart")
-```
-
-```
-## Loading required package: rpart
-```
-
-```r
 if(!IsRpartInstalled){
     install.packages("rpart")
     library("rpart")
     }
 
 IsRpartPlotInstalled <- require("rpart.plot")
-```
-
-```
-## Loading required package: rpart.plot
-```
-
-```r
 if(!IsRpartPlotInstalled){
     install.packages("rpart.plot")
     library("rpart.plot")
@@ -103,8 +78,7 @@ In this section the data is downloaded and processed. Some basic transformations
 The `pml-training.csv` data is used to devise training and testing sets.
 The `pml-test.csv` data is used to predict and answer the 20 questions based on the trained model.
 
-
-```r
+```{r dataprocessing, echo=TRUE, results='hide'}
 # Download data
 download.file(training.url, training.file)
 download.file(test.cases.url,test.cases.file )
@@ -123,8 +97,7 @@ testing <-testing[,-c(1:7)]
 ## Cross-validation
 In this section cross-validation will be performed by splitting the training data in training (75%) and testing (25%) data.
 
-
-```r
+```{r datasplitting, echo=TRUE, results='hide'}
 subSamples <- createDataPartition(y=training$classe, p=0.75, list=FALSE)
 subTraining <- training[subSamples, ] 
 subTesting <- training[-subSamples, ]
@@ -136,12 +109,9 @@ The expected out-of-sample error will correspond to the quantity: 1-accuracy in 
 ## Exploratory analysis
 The variable `classe` contains 5 levels. The plot of the outcome variable shows the frequency of each levels in the subTraining data.
 
-
-```r
+```{r exploranalysis, echo=TRUE}
 plot(subTraining$classe, col="orange", main="Levels of the variable classe", xlab="classe levels", ylab="Frequency")
 ```
-
-![](Practical_ML_Course_Project_files/figure-html/exploranalysis-1.png) 
 
 The plot above shows that Level A is the most frequent classe. D appears to be the least frequent one.
 
@@ -149,8 +119,7 @@ The plot above shows that Level A is the most frequent classe. D appears to be t
 In this section a decision tree and random forest will be applied to the data.
 
 ### Decision tree
-
-```r
+```{r decisiontree, echo=TRUE}
 # Fit model
 modFitDT <- rpart(classe ~ ., data=subTraining, method="class")
 
@@ -161,52 +130,14 @@ predictDT <- predict(modFitDT, subTesting, type = "class")
 rpart.plot(modFitDT, main="Classification Tree", extra=102, under=TRUE, faclen=0)
 ```
 
-![](Practical_ML_Course_Project_files/figure-html/decisiontree-1.png) 
-
 Following confusion matrix shows the errors of the prediction algorithm.
 
-
-```r
+```{r decisiontreecm, echo=TRUE}
 confusionMatrix(predictDT, subTesting$classe)
 ```
 
-```
-## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction    A    B    C    D    E
-##          A 1266  208   25   91   29
-##          B   33  535   71   30   67
-##          C   28   90  676  130   94
-##          D   45   72   59  501   43
-##          E   23   44   24   52  668
-## 
-## Overall Statistics
-##                                          
-##                Accuracy : 0.7435         
-##                  95% CI : (0.731, 0.7557)
-##     No Information Rate : 0.2845         
-##     P-Value [Acc > NIR] : < 2.2e-16      
-##                                          
-##                   Kappa : 0.6738         
-##  Mcnemar's Test P-Value : < 2.2e-16      
-## 
-## Statistics by Class:
-## 
-##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9075   0.5638   0.7906   0.6231   0.7414
-## Specificity            0.8994   0.9492   0.9155   0.9466   0.9643
-## Pos Pred Value         0.7820   0.7269   0.6640   0.6958   0.8237
-## Neg Pred Value         0.9607   0.9007   0.9539   0.9276   0.9431
-## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
-## Detection Rate         0.2582   0.1091   0.1378   0.1022   0.1362
-## Detection Prevalence   0.3301   0.1501   0.2076   0.1468   0.1654
-## Balanced Accuracy      0.9035   0.7565   0.8531   0.7849   0.8528
-```
-
 ### Random forest
-
-```r
+```{r randomforest, echo=TRUE}
 # Fit model
 modFitRF <- randomForest(classe ~ ., data=subTraining, method="class")
 
@@ -216,43 +147,8 @@ predictRF <- predict(modFitRF, subTesting, type = "class")
 
 Following confusion matrix shows the errors of the prediction algorithm.
 
-
-```r
+```{r randomforestcm, echo=TRUE}
 confusionMatrix(predictRF, subTesting$classe)
-```
-
-```
-## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction    A    B    C    D    E
-##          A 1394    2    0    0    0
-##          B    1  946    8    0    0
-##          C    0    1  846    6    0
-##          D    0    0    1  796    1
-##          E    0    0    0    2  900
-## 
-## Overall Statistics
-##                                           
-##                Accuracy : 0.9955          
-##                  95% CI : (0.9932, 0.9972)
-##     No Information Rate : 0.2845          
-##     P-Value [Acc > NIR] : < 2.2e-16       
-##                                           
-##                   Kappa : 0.9943          
-##  Mcnemar's Test P-Value : NA              
-## 
-## Statistics by Class:
-## 
-##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9993   0.9968   0.9895   0.9900   0.9989
-## Specificity            0.9994   0.9977   0.9983   0.9995   0.9995
-## Pos Pred Value         0.9986   0.9906   0.9918   0.9975   0.9978
-## Neg Pred Value         0.9997   0.9992   0.9978   0.9981   0.9998
-## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
-## Detection Rate         0.2843   0.1929   0.1725   0.1623   0.1835
-## Detection Prevalence   0.2847   0.1947   0.1739   0.1627   0.1839
-## Balanced Accuracy      0.9994   0.9973   0.9939   0.9948   0.9992
 ```
 
 ## Conclusion
@@ -267,20 +163,11 @@ The expected out-of-sample error is estimated at 0.005, or 0.5%. The expected ou
 ## Submission
 In this section the files for the project submission are generated using the random forest algorithm on the testing data.
 
-
-```r
+```{r submission, echo=TRUE}
 # Perform prediction
 predictSubmission <- predict(modFitRF, testing, type="class")
 predictSubmission
-```
 
-```
-##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
-##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
-## Levels: A B C D E
-```
-
-```r
 # Write files for submission
 pml_write_files = function(x){
   n = length(x)
@@ -291,4 +178,3 @@ pml_write_files = function(x){
 }
 
 pml_write_files(predictSubmission)
-```
